@@ -98,6 +98,7 @@ class Message(BaseModel):
     id: Optional[ObjectId] = Field(alias="_id")
     content: str
     chat_id: int
+    tx_hash: str
     created_time: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
     class Config:

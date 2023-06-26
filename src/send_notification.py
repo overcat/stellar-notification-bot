@@ -1,6 +1,7 @@
 import asyncio
 
 from loguru import logger
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ParseMode
 from telegram.error import Forbidden
 
@@ -14,6 +15,16 @@ async def send_telegram_message(message: Message):
             chat_id=message.chat_id,
             text=message.content,
             parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="View on stellar.expert",
+                            url=f"https://stellar.expert/explorer/public/tx/{message.tx_hash}",
+                        )
+                    ],
+                ]
+            ),
         )
         await message.remove()
     except Forbidden as e:

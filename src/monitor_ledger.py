@@ -23,7 +23,7 @@ def format_asset(asset: Asset) -> str:
         return "XLM"
     else:
         assert asset.issuer is not None
-        return f"{asset.code}({asset.issuer[-4:]})"
+        return f"{asset.code}({asset.issuer[:4]}...{asset.issuer[-4:]})"
 
 
 def format_number(num_str: str) -> str:
@@ -67,10 +67,11 @@ async def build_create_account_messages(
         f"From: `{from_}`\n"
         f"To: `{to}`\n"
         f"Amount: `{format_number(op.starting_balance)} XLM`\n"
-        f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
     chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
-    messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
+    messages = [
+        Message(chat_id=chat_id, content=text, tx_hash=tx_hash) for chat_id in chat_ids
+    ]
     return messages
 
 
@@ -79,14 +80,11 @@ async def build_account_merge_messages(
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
     to = op.destination.account_id
-    text = (
-        "*Account Merge*\n"
-        f"Account: `{from_}`\n"
-        f"Merge to: `{to}`\n"
-        f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
-    )
+    text = "*Account Merge*\n" f"Account: `{from_}`\n" f"Merge to: `{to}`\n"
     chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
-    messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
+    messages = [
+        Message(chat_id=chat_id, content=text, tx_hash=tx_hash) for chat_id in chat_ids
+    ]
     return messages
 
 
@@ -118,10 +116,11 @@ async def build_payment_messages(
         f"From: `{from_}`\n"
         f"To: `{to}`\n"
         f"Amount: `{format_number(op.amount)} {format_asset(op.asset)}`\n"
-        f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
     chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
-    messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
+    messages = [
+        Message(chat_id=chat_id, content=text, tx_hash=tx_hash) for chat_id in chat_ids
+    ]
     return messages
 
 
@@ -136,10 +135,11 @@ async def build_path_payment_strict_send_messages(
         f"Destination: `{to}`\n"
         f"Send Amount: `{format_number(op.send_amount)} {format_asset(op.send_asset)}`\n"
         f"Destination Min Receive Amount: `{format_number(op.dest_min)} {format_asset(op.dest_asset)}`\n"
-        f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
     chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
-    messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
+    messages = [
+        Message(chat_id=chat_id, content=text, tx_hash=tx_hash) for chat_id in chat_ids
+    ]
     return messages
 
 
@@ -154,10 +154,11 @@ async def build_path_payment_strict_receive_messages(
         f"Destination: `{to}`\n"
         f"Send Max Amount: `{format_number(op.send_max)} {format_asset(op.send_asset)}`\n"
         f"Destination Receive: `{format_number(op.dest_amount)} {format_asset(op.dest_asset)}`\n"
-        f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
     chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
-    messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
+    messages = [
+        Message(chat_id=chat_id, content=text, tx_hash=tx_hash) for chat_id in chat_ids
+    ]
     return messages
 
 
