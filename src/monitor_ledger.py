@@ -205,6 +205,9 @@ async def monitor_ledger():
             logger.info(f"latest_ledger: {latest_ledger}")
         processed_ledger = await SystemInfo.get_processed_ledger()
         logger.info(f"processed_ledger: {processed_ledger}")
+        if processed_ledger >= latest_ledger:
+            await asyncio.sleep(3)
+            continue
         for ledger_id in range(processed_ledger + 1, latest_ledger + 1):
             logger.info(f"process ledger: {ledger_id}")
             transactions = await get_transactions(ledger_id)
