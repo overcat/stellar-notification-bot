@@ -1,3 +1,4 @@
+import loguru
 from stellar_sdk import Keypair
 from stellar_sdk.exceptions import Ed25519PublicKeyInvalidError
 from telegram import Update
@@ -11,7 +12,7 @@ from src.db import Chat
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat is not None
     chat_id = update.effective_chat.id
-    Chat.new_chat(chat_id)
+    await Chat.new_chat(chat_id)
     await context.bot.send_message(
         chat_id=chat_id,
         text="Hello, I'm Stellar Notification Bot! "
@@ -33,7 +34,7 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     account_id = context.args[0].strip()
     try:
         Keypair.from_public_key(account_id)
-        Chat.add_stellar_account(chat_id, account_id)
+        await Chat.add_stellar_account(chat_id, account_id)
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"Added successfully! You will receive notifications "
@@ -61,7 +62,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
     account_id = context.args[0].strip()
-    Chat.remove_stellar_account(chat_id, account_id)
+    await Chat.remove_stellar_account(chat_id, account_id)
     await context.bot.send_message(
         chat_id=chat_id,
         text=f"Removed successfully! You will not receive notifications "
@@ -74,7 +75,7 @@ async def enable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat is not None
     assert update.message is not None
     chat_id = update.effective_chat.id
-    Chat.enable_notification(chat_id)
+    await Chat.enable_notification(chat_id)
     await context.bot.send_message(
         chat_id=chat_id,
         text=f"Enabled successfully! You will receive notifications "
@@ -87,7 +88,7 @@ async def disable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat is not None
     assert update.message is not None
     chat_id = update.effective_chat.id
-    Chat.disable_notification(chat_id)
+    await Chat.disable_notification(chat_id)
     await context.bot.send_message(
         chat_id=chat_id,
         text=f"Disabled successfully! You will not receive notifications "
@@ -103,4 +104,5 @@ tg_app.add_handler(CommandHandler("enable", enable))
 tg_app.add_handler(CommandHandler("disable", disable))
 
 if __name__ == "__main__":
+    loguru.logger.info("Starting bot...")
     tg_app.run_polling()

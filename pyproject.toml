@@ -8,10 +8,10 @@ authors = [
 dependencies = [
     "python-dotenv>=1.0.0",
     "python-telegram-bot>=20.3",
-    "pymongo>=4.4.0",
     "pydantic>=1.10.9",
     "stellar-sdk>=8.2.1",
     "loguru>=0.7.0",
+    "motor>=3.2.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

@@ -26,6 +26,7 @@ httpx==0.24.1
 idna==3.4
 loguru==0.7.0
 mnemonic==0.20
+motor==3.2.0
 multidict==6.0.4
 mypy==1.4.1
 mypy-extensions==1.0.0

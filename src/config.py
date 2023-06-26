@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 import loguru
 from dotenv import load_dotenv
-from stellar_sdk import Server
 from telegram.ext import ApplicationBuilder
 
 load_dotenv()
+
 
 @dataclass
 class Config:
@@ -15,6 +15,7 @@ class Config:
     bot_token: str
     db_name: str
     network_passphrase: str
+    horizon_url: str
 
 
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
@@ -45,10 +46,9 @@ config = Config(
     mongodb_uri=MONGODB_URI,
     bot_token=BOT_TOKEN,
     db_name=DB_NAME,
+    horizon_url=HORIZON_URL,
     network_passphrase=NETWORK_PASSPHRASE,
 )
 
 # telegram
 tg_app = ApplicationBuilder().token(config.bot_token).build()
-# Stellar SDK
-server = Server(horizon_url=HORIZON_URL)

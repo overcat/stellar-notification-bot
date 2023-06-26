@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 from loguru import logger
@@ -11,9 +12,10 @@ from stellar_sdk import (
     MuxedAccount,
     Asset,
     CreateAccount,
+    ServerAsync,
 )
 
-from src.config import server, config
+from src.config import config
 from src.db import SystemInfo, Message, Chat
 
 
@@ -41,20 +43,22 @@ def format_number(num_str: str) -> str:
     return int_part + dec_part
 
 
-def get_transactions(ledger_id: int) -> list[str]:
+async def get_transactions(ledger_id: int) -> list[str]:
     transactions = []
-    builder = (
-        server.transactions().for_ledger(ledger_id).include_failed(False).limit(200)
-    )
-    transactions += [
-        record["envelope_xdr"] for record in builder.call()["_embedded"]["records"]
-    ]
-    while records := builder.next()["_embedded"]["records"]:
-        transactions += [record["envelope_xdr"] for record in records]
-    return transactions
+    async with ServerAsync(config.horizon_url) as server:
+        builder = (
+            server.transactions().for_ledger(ledger_id).include_failed(False).limit(200)
+        )
+        transactions += [
+            record["envelope_xdr"]
+            for record in (await builder.call())["_embedded"]["records"]
+        ]
+        while records := (await builder.next())["_embedded"]["records"]:
+            transactions += [record["envelope_xdr"] for record in records]
+        return transactions
 
 
-def build_create_account_messages(
+async def build_create_account_messages(
     op: CreateAccount, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
@@ -66,12 +70,12 @@ def build_create_account_messages(
         f"Amount: `{format_number(op.starting_balance)} XLM`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
 
-def build_account_merge_messages(
+async def build_account_merge_messages(
     op: AccountMerge, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
@@ -82,12 +86,12 @@ def build_account_merge_messages(
         f"Merge to: `{to}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
 
-def build_payment_messages(
+async def build_payment_messages(
     op: Payment, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
@@ -99,12 +103,12 @@ def build_payment_messages(
         f"Amount: `{format_number(op.amount)} {format_asset(op.asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
 
-def build_path_payment_strict_send_messages(
+async def build_path_payment_strict_send_messages(
     op: PathPaymentStrictSend, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
@@ -117,12 +121,12 @@ def build_path_payment_strict_send_messages(
         f"Destination Min Receive Amount: `{format_number(op.dest_min)} {format_asset(op.dest_asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
 
-def build_path_payment_strict_receive_messages(
+async def build_path_payment_strict_receive_messages(
     op: PathPaymentStrictReceive, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
     from_ = op.source.account_id if op.source else tx_source.account_id
@@ -135,12 +139,12 @@ def build_path_payment_strict_receive_messages(
         f"Destination Receive: `{format_number(op.dest_amount)} {format_asset(op.dest_asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
 
-def save_messages(transactions: list[str]) -> None:
+async def save_messages(transactions: list[str]) -> None:
     messages = []
     for transaction in transactions:
         try:
@@ -157,39 +161,40 @@ def save_messages(transactions: list[str]) -> None:
         tx = te.transaction
         for op in tx.operations:
             if isinstance(op, AccountMerge):
-                messages += build_account_merge_messages(op, te.hash_hex(), tx.source)
+                messages += await build_account_merge_messages(
+                    op, te.hash_hex(), tx.source
+                )
             elif isinstance(op, CreateAccount):
-                messages += build_create_account_messages(op, te.hash_hex(), tx.source)
+                messages += await build_create_account_messages(
+                    op, te.hash_hex(), tx.source
+                )
             elif isinstance(op, Payment):
-                messages += build_payment_messages(op, te.hash_hex(), tx.source)
+                messages += await build_payment_messages(op, te.hash_hex(), tx.source)
             elif isinstance(op, PathPaymentStrictSend):
-                messages += build_path_payment_strict_send_messages(
+                messages += await build_path_payment_strict_send_messages(
                     op, te.hash_hex(), tx.source
                 )
             elif isinstance(op, PathPaymentStrictReceive):
-                messages += build_path_payment_strict_receive_messages(
+                messages += await build_path_payment_strict_receive_messages(
                     op, te.hash_hex(), tx.source
                 )
-    Message.new_messages(messages)
+    await Message.new_messages(messages)
 
 
-def monitor_ledger():
-    latest_ledger = server.root().call()["history_latest_ledger"]
-    logger.info(f"latest_ledger: {latest_ledger}")
-    processed_ledger = SystemInfo.get_processed_ledger()
-    logger.info(f"processed_ledger: {processed_ledger}")
-    for ledger_id in range(processed_ledger + 1, latest_ledger + 1):
-        logger.info(f"process ledger: {ledger_id}")
-        transactions = get_transactions(ledger_id)
-        save_messages(transactions)
-        SystemInfo.update_processed_ledger(ledger_id)
+async def monitor_ledger():
+    while True:
+        async with ServerAsync(config.horizon_url) as server:
+            latest_ledger = (await server.root().call())["history_latest_ledger"]
+            logger.info(f"latest_ledger: {latest_ledger}")
+        processed_ledger = await SystemInfo.get_processed_ledger()
+        logger.info(f"processed_ledger: {processed_ledger}")
+        for ledger_id in range(processed_ledger + 1, latest_ledger + 1):
+            logger.info(f"process ledger: {ledger_id}")
+            transactions = await get_transactions(ledger_id)
+            await save_messages(transactions)
+            await SystemInfo.update_processed_ledger(ledger_id)
 
 
 if __name__ == "__main__":
     logger.info("Start monitor ledger.")
-    while True:
-        try:
-            monitor_ledger()
-        except Exception as e:
-            logger.error(f"monitor ledger error: {e}")
-            time.sleep(60)
+    asyncio.run(monitor_ledger())
