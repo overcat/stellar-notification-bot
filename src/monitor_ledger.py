@@ -190,6 +190,6 @@ if __name__ == "__main__":
     while True:
         try:
             monitor_ledger()
-            time.sleep(2)
         except Exception as e:
+            logger.error(f"monitor ledger error: {e}")
             time.sleep(60)

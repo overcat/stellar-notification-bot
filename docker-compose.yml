@@ -6,15 +6,18 @@ services:
     env_file:
       - .env
     command: python src/send_notification.py
+    restart: always
 
   monitor_ledger:
     build: .
     env_file:
       - .env
     command: python src/monitor_ledger.py
+    restart: always
 
   bot:
     build: .
     env_file:
       - .env
     command: python src/bot.py
+    restart: always
