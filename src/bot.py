@@ -99,8 +99,8 @@ async def disable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 tg_app.add_handler(CommandHandler("start", start))
 tg_app.add_handler(CommandHandler("add", add))
 tg_app.add_handler(CommandHandler("remove", remove))
-tg_app.add_handler(CommandHandler("enable", remove))
-tg_app.add_handler(CommandHandler("disable", remove))
+tg_app.add_handler(CommandHandler("enable", enable))
+tg_app.add_handler(CommandHandler("disable", disable))
 
 if __name__ == "__main__":
     tg_app.run_polling()
