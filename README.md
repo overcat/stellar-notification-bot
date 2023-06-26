@@ -16,6 +16,7 @@ Telegram.
     - `DB_NAME (Optional)`: The name of your MongoDB database
     - `NETWORK_PASSPHRASE (Optional)`: The passphrase of the Stellar network you want to use
     - `HORIZON_URL (Optional)`: The URL of the Horizon server you want to use
+    - `IGNORE_TINY_PAYMENT (Optional)`: Set to `true` to ignore tiny payments
 
 2. Run the bot with docker-compose:
     ```bash

@@ -16,6 +16,7 @@ class Config:
     db_name: str
     network_passphrase: str
     horizon_url: str
+    ignore_tiny_payment: bool
 
 
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
@@ -24,6 +25,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_NAME = os.getenv("DB_NAME", "stellar_notification_bot")
 HORIZON_URL = os.getenv("HORIZON_URL")
 NETWORK_PASSPHRASE = os.getenv("NETWORK_PASSPHRASE")
+IGNORE_TINY_PAYMENT = os.getenv("IGNORE_TINY_PAYMENT", "true").lower() == "true"
 
 if DEV_MODE:
     loguru.logger.info("Running in dev mode")
@@ -48,6 +50,7 @@ config = Config(
     db_name=DB_NAME,
     horizon_url=HORIZON_URL,
     network_passphrase=NETWORK_PASSPHRASE,
+    ignore_tiny_payment=IGNORE_TINY_PAYMENT,
 )
 
 # telegram

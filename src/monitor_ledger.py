@@ -1,6 +1,5 @@
 import asyncio
-import time
-
+from decimal import Decimal
 from loguru import logger
 from stellar_sdk import (
     parse_transaction_envelope_from_xdr,
@@ -91,9 +90,27 @@ async def build_account_merge_messages(
     return messages
 
 
+def hit_payment_filter(op: Payment):
+    if op.asset.is_native() and Decimal(op.amount) < Decimal("0.01"):
+        return True
+
+    if op.asset == Asset(
+        "AQUA", "GBNZILSTVQZ4R7IKQDGHYGY2QXL5QOFJYQMXPKWRRM5PAV7Y4M67AQUA"
+    ) and Decimal(op.amount) < Decimal("100"):
+        return True
+
+    if op.asset == Asset(
+        "USDC", "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    ) and Decimal(op.amount) < Decimal("0.01"):
+        return True
+    return False
+
+
 async def build_payment_messages(
     op: Payment, tx_hash: str, tx_source: MuxedAccount
 ) -> list[Message]:
+    if config.ignore_tiny_payment and hit_payment_filter(op):
+        return []
     from_ = op.source.account_id if op.source else tx_source.account_id
     to = op.destination.account_id
     text = (
