@@ -24,5 +24,5 @@ Telegram.
 
 ## Note:
 
-- The not currently only listens to five types of operations: CreateAccount, AccountMerge, Payment,
+- The bot currently only listens to five types of operations: CreateAccount, AccountMerge, Payment,
   PathPaymentStrictSend and PathPaymentStrictReceive.
