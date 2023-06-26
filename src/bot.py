@@ -9,6 +9,7 @@ from src.db import Chat
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
     chat_id = update.effective_chat.id
     Chat.new_chat(chat_id)
     await context.bot.send_message(
@@ -19,7 +20,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
+    assert update.message is not None
     chat_id = update.effective_chat.id
+    if context.args is None or len(context.args) != 1:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Usage: /add <account id>",
+            reply_to_message_id=update.message.message_id,
+        )
+        return
     account_id = context.args[0].strip()
     try:
         Keypair.from_public_key(account_id)
@@ -40,7 +50,16 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
+    assert update.message is not None
     chat_id = update.effective_chat.id
+    if context.args is None or len(context.args) != 1:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Usage: /remove <account id>",
+            reply_to_message_id=update.message.message_id,
+        )
+        return
     account_id = context.args[0].strip()
     Chat.remove_stellar_account(chat_id, account_id)
     await context.bot.send_message(
@@ -51,9 +70,37 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def enable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
+    assert update.message is not None
+    chat_id = update.effective_chat.id
+    Chat.enable_notification(chat_id)
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=f"Enabled successfully! You will receive notifications "
+        f"when the account's balance changes.",
+        reply_to_message_id=update.message.message_id,
+    )
+
+
+async def disable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
+    assert update.message is not None
+    chat_id = update.effective_chat.id
+    Chat.disable_notification(chat_id)
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=f"Disabled successfully! You will not receive notifications "
+        f"when the account's balance changes.",
+        reply_to_message_id=update.message.message_id,
+    )
+
+
 tg_app.add_handler(CommandHandler("start", start))
 tg_app.add_handler(CommandHandler("add", add))
 tg_app.add_handler(CommandHandler("remove", remove))
+tg_app.add_handler(CommandHandler("enable", remove))
+tg_app.add_handler(CommandHandler("disable", remove))
 
 if __name__ == "__main__":
     tg_app.run_polling()
