@@ -70,7 +70,7 @@ async def build_create_account_messages(
         f"Amount: `{format_number(op.starting_balance)} XLM`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = await Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
@@ -86,7 +86,7 @@ async def build_account_merge_messages(
         f"Merge to: `{to}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = await Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
@@ -103,7 +103,7 @@ async def build_payment_messages(
         f"Amount: `{format_number(op.amount)} {format_asset(op.asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = await Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
@@ -121,7 +121,7 @@ async def build_path_payment_strict_send_messages(
         f"Destination Min Receive Amount: `{format_number(op.dest_min)} {format_asset(op.dest_asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = await Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 
@@ -139,7 +139,7 @@ async def build_path_payment_strict_receive_messages(
         f"Destination Receive: `{format_number(op.dest_amount)} {format_asset(op.dest_asset)}`\n"
         f"[View on StellarExpert](https://stellar\\.expert/explorer/public/tx/{tx_hash})"
     )
-    chat_ids = await Chat.get_chat_ids([from_, to])
+    chat_ids = await Chat.get_chat_ids_by_enable([from_, to])
     messages = [Message(chat_id=chat_id, content=text) for chat_id in chat_ids]
     return messages
 

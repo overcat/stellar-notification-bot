@@ -23,11 +23,11 @@ class Chat(BaseModel):
     created_time: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
     @staticmethod
-    async def get_chat_ids(account_ids: list[str]) -> list[int]:
+    async def get_chat_ids_by_enable(account_ids: list[str]) -> list[int]:
         return [
             chat["chat_id"]
             async for chat in db.chat.find(
-                {"$or": [{"account_ids": acc} for acc in account_ids]},
+                {"$or": [{"account_ids": acc} for acc in account_ids], "enable": True},
                 {"chat_id": 1, "_id": 0},
             )
         ]
@@ -122,4 +122,13 @@ class Message(BaseModel):
 
 # Init DB
 if __name__ == "__main__":
-    asyncio.run(SystemInfo.init_processed_ledger())
+    # asyncio.run(SystemInfo.init_processed_ledger())
+    t = asyncio.run(
+        Chat.get_chat_ids_by_enable(
+            [
+                "GDBUD2ENGO677J3K64AMPRS6ECGDMATTJJWILPOHRQ56UYFF5USCC7KT",
+                "GBKEE4AZUJG3NDGUTVM35U22W24GEYCMWLSOGCV7KVKGOT25IAHK7EOR",
+            ]
+        )
+    )
+    print(t)
