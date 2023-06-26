@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  send_notification:
+    build: .
+    env_file:
+      - .env
+    command: python src/send_notification.py
+
+  monitor_ledger:
+    build: .
+    env_file:
+      - .env
+    command: python src/monitor_ledger.py
+
+  bot:
+    build: .
+    env_file:
+      - .env
+    command: python src/bot.py
