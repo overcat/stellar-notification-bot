@@ -1,12 +1,12 @@
 import loguru
-from stellar_sdk import Keypair
+from stellar_sdk import Keypair, ServerAsync
 from stellar_sdk.exceptions import Ed25519PublicKeyInvalidError
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
-from src.config import tg_app
-from src.db import Chat
+from src.config import tg_app, config
+from src.db import Chat, SystemInfo
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -97,11 +97,35 @@ async def disable(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def system(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat is not None
+    assert update.message is not None
+    chat_id = update.effective_chat.id
+
+    latest_processed_ledger = await SystemInfo.get_processed_ledger()
+
+    async with ServerAsync(config.horizon_url) as server:
+        latest_ledger = (await server.root().call())["history_latest_ledger"]
+
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=(
+            f"*System Info*\n"
+            f"Latest ledger: `{latest_ledger}`\n"
+            f"Latest processed ledger: `{latest_processed_ledger}`\n"
+            f"Left to process: `{latest_ledger - latest_processed_ledger}`"
+        ),
+        reply_to_message_id=update.message.message_id,
+        parse_mode=ParseMode.MARKDOWN_V2,
+    )
+
+
 tg_app.add_handler(CommandHandler("start", start))
 tg_app.add_handler(CommandHandler("add", add))
 tg_app.add_handler(CommandHandler("remove", remove))
 tg_app.add_handler(CommandHandler("enable", enable))
 tg_app.add_handler(CommandHandler("disable", disable))
+tg_app.add_handler(CommandHandler("system", system))
 
 if __name__ == "__main__":
     loguru.logger.info("Starting bot...")
